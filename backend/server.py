@@ -232,21 +232,38 @@ def perform_seasonal_decompose(df, forecast_days):
         df_indexed = df.set_index('date')
         decomposition = seasonal_decompose(df_indexed['calls_volume'], model='additive', period=7)
         
+        # Handle NaN values in trend data
+        trend_clean = decomposition.trend.dropna()
+        if len(trend_clean) < 6:  # Need at least 6 data points for slope calculation
+            raise ValueError("Insufficient trend data after removing NaN values")
+        
         # Simple trend extrapolation for forecast
-        trend_slope = (decomposition.trend.dropna()[-3:].mean() - decomposition.trend.dropna()[:3].mean()) / len(decomposition.trend.dropna())
+        trend_slope = (trend_clean[-3:].mean() - trend_clean[:3].mean()) / len(trend_clean)
         seasonal_pattern = decomposition.seasonal.iloc[-7:].values  # Last week's pattern
+        
+        # Get the last valid trend value
+        last_trend = trend_clean.iloc[-1]
+        if pd.isna(last_trend):
+            last_trend = trend_clean.mean()  # Fallback to mean if last value is NaN
         
         predictions = []
         for i in range(forecast_days):
-            trend_component = decomposition.trend.iloc[-1] + (i + 1) * trend_slope
+            trend_component = last_trend + (i + 1) * trend_slope
             seasonal_component = seasonal_pattern[i % 7]
-            prediction = trend_component + seasonal_component
-            predictions.append(prediction)
+            
+            # Handle NaN values
+            if pd.isna(trend_component):
+                trend_component = trend_clean.mean()
+            if pd.isna(seasonal_component):
+                seasonal_component = 0
+            
+            prediction = float(trend_component + seasonal_component)
+            predictions.append(max(0, prediction))  # Ensure non-negative predictions
         
         return {
             'predictions': predictions,
-            'trend': decomposition.trend.dropna().tolist(),
-            'seasonal': decomposition.seasonal.tolist(),
+            'trend': trend_clean.tolist(),
+            'seasonal': [float(x) if not pd.isna(x) else 0 for x in decomposition.seasonal.tolist()],
             'residual': decomposition.resid.dropna().tolist()
         }
     except Exception as e:
