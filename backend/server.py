@@ -1,6 +1,5 @@
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, APIRouter, HTTPException, UploadFile, File
-from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
