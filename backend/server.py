@@ -376,78 +376,75 @@ async def generate_forecast(request: ForecastRequest):
     
     # Perform forecasting based on method
     try:
-    if request.method == "arima":
-        result = await asyncio.to_thread(
-            perform_arima_forecast, df, request.forecast_days, request.confidence_level
-        )
-        predictions = result['predictions']
-        confidence_intervals = {
-            'lower': result['confidence_lower'],
-            'upper': result['confidence_upper']
-        }
-        accuracy_metrics = {'aic': result['aic'], 'bic': result.get('bic')}
-        
-    elif request.method == "exponential_smoothing":
-        result = await asyncio.to_thread(
-            perform_exponential_smoothing, df, request.forecast_days, request.confidence_level
-        )
-        predictions = result['predictions']
-        confidence_intervals = {
-            'lower': result['confidence_lower'],
-            'upper': result['confidence_upper']
-        }
-        accuracy_metrics = {'aic': result['aic']}
-        
-    elif request.method in ["random_forest", "linear_regression"]:
-        result = await asyncio.to_thread(
-            perform_ml_forecast, df, request.forecast_days, request.method
-        )
-        predictions = result['predictions']
-        confidence_intervals = None
-        accuracy_metrics = {
-            'mae': result['mae'],
-            'rmse': result['rmse'],
-            'r2_score': result.get('r2_score')
-        }
-        
-    elif request.method == "seasonal_decompose":
-        result = await asyncio.to_thread(
-            perform_seasonal_decompose, df, request.forecast_days
-        )
-        predictions = result['predictions']
-        confidence_intervals = None
-        accuracy_metrics = None
-        
-    else:
-        raise HTTPException(status_code=400, detail="Invalid forecasting method")
+        if request.method == "arima":
+            result = await asyncio.to_thread(
+                perform_arima_forecast, df, request.forecast_days, request.confidence_level
+            )
+            predictions = result['predictions']
+            confidence_intervals = {
+                'lower': result['confidence_lower'],
+                'upper': result['confidence_upper']
+            }
+            accuracy_metrics = {'aic': result['aic'], 'bic': result.get('bic')}
+            
+        elif request.method == "exponential_smoothing":
+            result = await asyncio.to_thread(
+                perform_exponential_smoothing, df, request.forecast_days, request.confidence_level
+            )
+            predictions = result['predictions']
+            confidence_intervals = {
+                'lower': result['confidence_lower'],
+                'upper': result['confidence_upper']
+            }
+            accuracy_metrics = {'aic': result['aic']}
+            
+        elif request.method in ["random_forest", "linear_regression"]:
+            result = await asyncio.to_thread(
+                perform_ml_forecast, df, request.forecast_days, request.method
+            )
+            predictions = result['predictions']
+            confidence_intervals = None
+            accuracy_metrics = {
+                'mae': result['mae'],
+                'rmse': result['rmse'],
+                'r2_score': result.get('r2_score')
+            }
+            
+        elif request.method == "seasonal_decompose":
+            result = await asyncio.to_thread(
+                perform_seasonal_decompose, df, request.forecast_days
+            )
+            predictions = result['predictions']
+            confidence_intervals = None
+            accuracy_metrics = None
+            
+        else:
+            raise HTTPException(status_code=400, detail="Invalid forecasting method")
 
-    # This part below was also part of your original code, so it is included
-    # to make the replacement a single copy-paste action.
-
-    # Calculate staffing recommendations
-    staffing_recommendations = [
-        calculate_staffing_requirement(pred, target_service_level=0.8) 
-        for pred in predictions
-    ]
-    
-    # Create forecast result
-    forecast_result = ForecastResult(
-        method=request.method,
-        forecast_dates=forecast_dates,
-        predicted_calls=predictions,
-        confidence_intervals=confidence_intervals,
-        accuracy_metrics=accuracy_metrics,
-        staffing_recommendations=staffing_recommendations
-    )
-    
-    # Save to database
-    prepared_forecast = prepare_for_mongo(forecast_result.dict())
-    await db.forecasts.insert_one(prepared_forecast)
-    
-    return forecast_result
-    
-except Exception as e:
-    raise HTTPException(status_code=400, detail=f"Forecasting failed: {str(e)}")
+        # Calculate staffing recommendations
+        staffing_recommendations = [
+            calculate_staffing_requirement(pred, target_service_level=0.8) 
+            for pred in predictions
+        ]
+        
+        # Create forecast result
+        forecast_result = ForecastResult(
+            method=request.method,
+            forecast_dates=forecast_dates,
+            predicted_calls=predictions,
+            confidence_intervals=confidence_intervals,
+            accuracy_metrics=accuracy_metrics,
+            staffing_recommendations=staffing_recommendations
+        )
+        
+        # Save to database
+        prepared_forecast = prepare_for_mongo(forecast_result.dict())
+        await db.forecasts.insert_one(prepared_forecast)
+        
+        return forecast_result
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Forecasting failed: {str(e)}")
 
 @api_router.get("/forecasts", response_model=List[ForecastResult])
 async def get_forecasts():
