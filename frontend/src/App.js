@@ -41,8 +41,8 @@ const Dashboard = () => {
   const loadData = async () => {
     try {
       const [callResponse, forecastResponse] = await Promise.all([
-        axios.get('https://workforce-forecasting-tool-1.onrender.com/api/call-data'),
-axios.get('https://workforce-forecasting-tool-1.onrender.com/api/forecasts')
+        axios.get(`${API}/call-data`),
+axios.get(`${API}/forecasts`)
       ]);
       setCallData(callResponse.data);
       setForecasts(forecastResponse.data);
