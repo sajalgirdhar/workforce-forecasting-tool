@@ -370,11 +370,9 @@ async def generate_forecast(request: ForecastRequest):
     if len(df) < 7:
         raise HTTPException(status_code=400, detail="Minimum 7 data points required for forecasting")
     
-    # Generate forecast dates
     last_date = pd.to_datetime(df['date'].max())
     forecast_dates = [(last_date + pd.Timedelta(days=i+1)).strftime('%Y-%m-%d') for i in range(request.forecast_days)]
     
-    # Perform forecasting based on method
     try:
         if request.method == "arima":
             result = await asyncio.to_thread(
@@ -421,13 +419,11 @@ async def generate_forecast(request: ForecastRequest):
         else:
             raise HTTPException(status_code=400, detail="Invalid forecasting method")
 
-        # Calculate staffing recommendations
         staffing_recommendations = [
             calculate_staffing_requirement(pred, target_service_level=0.8) 
             for pred in predictions
         ]
         
-        # Create forecast result
         forecast_result = ForecastResult(
             method=request.method,
             forecast_dates=forecast_dates,
@@ -437,7 +433,6 @@ async def generate_forecast(request: ForecastRequest):
             staffing_recommendations=staffing_recommendations
         )
         
-        # Save to database
         prepared_forecast = prepare_for_mongo(forecast_result.dict())
         await db.forecasts.insert_one(prepared_forecast)
         
