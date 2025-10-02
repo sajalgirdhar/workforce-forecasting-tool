@@ -1,29 +1,26 @@
-import React from "react";
-import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
-import Dashboard from "./Dashboard";
-import DataManagement from "./DataManagement";
-import Forecasting from "./Forecasting";
+import React, { useState, useEffect } from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import axios from "axios";
+import { Card, CardContent, CardHeader, CardTitle } from "./components/ui/card";
+import { Button } from "./components/ui/button";
+import { Input } from "./components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
+import { Badge } from "./components/ui/badge";
+import { Progress } from "./components/ui/progress";
+import { Alert, AlertDescription, AlertTitle } from "./components/ui/alert";
+import { Separator } from "./components/ui/separator";
+import { 
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  BarChart, Bar, ReferenceLine, Area, AreaChart
+} from "recharts";
+import { useDropzone } from "react-dropzone";
+import { 
+  Calendar, TrendingUp, Users, Target, Upload, Download, 
+  BarChart3, Activity, AlertCircle, CheckCircle2, Brain, Settings
+} from "lucide-react";
+import { toast } from "sonner";
 
-function App() {
-  return (
-    <Router>
-      <div className="min-h-screen bg-slate-50">
-        {/* Navigation Bar */}
-        <nav className="bg-white shadow p-4 flex gap-6">
-          <Link to="/" className="text-blue-600 hover:underline">🏠 Dashboard</Link>
-          <Link to="/forecast" className="text-blue-600 hover:underline">📊 Forecasting</Link>
-          <Link to="/data" className="text-blue-600 hover:underline">📂 Data Management</Link>
-        </nav>
-
-        {/* Routes */}
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/forecast" element={<Forecasting />} />
-          <Route path="/data" element={<DataManagement />} />
-        </Routes>
-      </div>
-    </Router>
-  );
-}
-
-export default App;
+// ✅ API base URL from .env (works in Netlify & locally)
+const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+const API = `${BACKEND_URL}/api`;
