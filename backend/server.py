@@ -30,14 +30,17 @@ db = client[os.environ['DB_NAME']]
 
 # ✅ FastAPI app with CORS
 app = FastAPI()
+
+# Allow Netlify + local dev (CRA:3000, Vite:5173)
 origins = [
-    "https://forecastingtool.netlify.app",  # ✅ your Netlify frontend
-    "http://localhost:3000",                # for local dev
+    "https://forecastingtool.netlify.app",  # Netlify frontend
+    "http://localhost:3000",                # React CRA local dev
+    "http://localhost:5173",                # Vite local dev
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=origins,      # 👈 only allow trusted frontends
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -47,7 +50,7 @@ app.add_middleware(
 api_router = APIRouter(prefix="/api")
 
 # (⚠️ keep all your Pydantic models, helper functions, and routes unchanged)
-# IMPORTANT ROUTES (what frontend must call):
+# IMPORTANT ROUTES (frontend calls these):
 # POST /api/call-data
 # POST /api/call-data/bulk
 # GET  /api/call-data
