@@ -1,59 +1,46 @@
 import React, { useState } from "react";
-import api from "./lib/api";
+import axios from "axios";
+import { Button } from "./components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "./components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./components/ui/select";
+import { Input } from "./components/ui/input";
+import { toast } from "sonner";
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API = `${BACKEND_URL}/api`;
 
 function Forecasting() {
   const [method, setMethod] = useState("arima");
   const [days, setDays] = useState(7);
-  const [forecast, setForecast] = useState(null);
 
-  const handleForecast = async () => {
+  const generateForecast = async () => {
     try {
-      const res = await api.post("/api/forecast", {
-        method,
-        forecast_days: parseInt(days, 10),
-        confidence_level: 0.95,
-      });
-      setForecast(res.data);
+      await axios.post(`${API}/forecast`, { method, forecast_days: days, confidence_level: 0.95 });
+      toast.success("Forecast generated!");
     } catch (err) {
-      console.error("❌ Forecast error:", err);
-      alert("Forecast request failed!");
+      toast.error("Failed to generate forecast");
     }
   };
 
   return (
-    <div>
-      <h2>📊 Forecasting</h2>
-
-      <label>
-        Method:
-        <select value={method} onChange={(e) => setMethod(e.target.value)}>
-          <option value="arima">ARIMA</option>
-          <option value="exponential_smoothing">Exponential Smoothing</option>
-          <option value="random_forest">Random Forest</option>
-          <option value="linear_regression">Linear Regression</option>
-          <option value="seasonal_decompose">Seasonal Decompose</option>
-        </select>
-      </label>
-
-      <label>
-        Days:
-        <input type="number" value={days} onChange={(e) => setDays(e.target.value)} />
-      </label>
-
-      <button onClick={handleForecast}>Generate Forecast</button>
-
-      {forecast && (
-        <div>
-          <h3>Result ({forecast.method})</h3>
-          <ul>
-            {forecast.forecast_dates.map((date, idx) => (
-              <li key={idx}>
-                {date}: {Math.round(forecast.predicted_calls[idx])} calls (staff {forecast.staffing_recommendations[idx]})
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+    <div className="p-6 space-y-6">
+      <h1 className="text-3xl font-bold">📊 Forecasting</h1>
+      <Card>
+        <CardHeader><CardTitle>Generate Forecast</CardTitle></CardHeader>
+        <CardContent className="flex gap-4">
+          <Select value={method} onValueChange={setMethod}>
+            <SelectTrigger><SelectValue placeholder="Select method" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="arima">ARIMA</SelectItem>
+              <SelectItem value="exponential_smoothing">Exponential Smoothing</SelectItem>
+              <SelectItem value="random_forest">Random Forest</SelectItem>
+              <SelectItem value="linear_regression">Linear Regression</SelectItem>
+            </SelectContent>
+          </Select>
+          <Input type="number" min="1" max="30" value={days} onChange={(e) => setDays(parseInt(e.target.value))} />
+          <Button onClick={generateForecast} className="bg-blue-600">Generate</Button>
+        </CardContent>
+      </Card>
     </div>
   );
 }
