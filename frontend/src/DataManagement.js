@@ -1,75 +1,62 @@
 import React, { useState } from "react";
-import api from "./lib/api";
+import axios from "axios";
+import { Button } from "./components/ui/button";
+import { Input } from "./components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "./components/ui/card";
+import { Upload, Download } from "lucide-react";
+import { toast } from "sonner";
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API = `${BACKEND_URL}/api`;
 
 function DataManagement() {
-  const [file, setFile] = useState(null);
-  const [date, setDate] = useState("");
-  const [callsVolume, setCallsVolume] = useState("");
-  const [staffingLevel, setStaffingLevel] = useState("");
-  const [serviceLevel, setServiceLevel] = useState("");
+  const [newData, setNewData] = useState({ date: "", calls_volume: "", staffing_level: "", service_level: "" });
 
-  // Upload CSV
-  const handleFileUpload = async () => {
-    if (!file) {
-      alert("Please select a CSV file first!");
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append("file", file); // must be "file" to match FastAPI UploadFile
-
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     try {
-      const res = await api.post("/api/upload-csv", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+      await axios.post(`${API}/call-data`, {
+        ...newData,
+        calls_volume: parseInt(newData.calls_volume),
+        staffing_level: parseInt(newData.staffing_level),
+        service_level: parseFloat(newData.service_level)
       });
-      alert("✅ File uploaded successfully!");
-      console.log(res.data);
+      toast.success("Data added successfully!");
     } catch (err) {
-      console.error("❌ Upload error:", err);
-      alert("Upload failed!");
-    }
-  };
-
-  // Manual Entry
-  const handleManualSubmit = async () => {
-    if (!date || !callsVolume || !staffingLevel || !serviceLevel) {
-      alert("Please fill in all fields!");
-      return;
-    }
-
-    try {
-      const res = await api.post("/api/call-data", {
-        date,
-        calls_volume: parseInt(callsVolume, 10),
-        staffing_level: parseInt(staffingLevel, 10),
-        service_level: parseFloat(serviceLevel),
-      });
-      alert("✅ Manual entry saved!");
-      console.log(res.data);
-    } catch (err) {
-      console.error("❌ Manual entry error:", err);
-      alert("Failed to save manual entry!");
+      toast.error("Failed to add data");
     }
   };
 
   return (
-    <div>
-      <h2>📂 Data Management</h2>
+    <div className="p-6 space-y-6">
+      <h1 className="text-3xl font-bold">📂 Data Management</h1>
 
-      <div>
-        <h3>Upload CSV</h3>
-        <input type="file" accept=".csv" onChange={(e) => setFile(e.target.files[0])} />
-        <button onClick={handleFileUpload}>Upload CSV</button>
-      </div>
+      <Card>
+        <CardHeader><CardTitle>Manual Data Entry</CardTitle></CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
+            <Input type="date" value={newData.date} onChange={(e) => setNewData({ ...newData, date: e.target.value })} required />
+            <Input type="number" placeholder="Calls" value={newData.calls_volume} onChange={(e) => setNewData({ ...newData, calls_volume: e.target.value })} required />
+            <Input type="number" placeholder="Staffing" value={newData.staffing_level} onChange={(e) => setNewData({ ...newData, staffing_level: e.target.value })} required />
+            <Input type="number" placeholder="Service Level (0-1)" value={newData.service_level} onChange={(e) => setNewData({ ...newData, service_level: e.target.value })} required />
+            <Button type="submit" className="bg-green-600">Add Data</Button>
+          </form>
+        </CardContent>
+      </Card>
 
-      <div>
-        <h3>Manual Data Entry</h3>
-        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-        <input type="number" placeholder="Call Volume" value={callsVolume} onChange={(e) => setCallsVolume(e.target.value)} />
-        <input type="number" placeholder="Staffing Level" value={staffingLevel} onChange={(e) => setStaffingLevel(e.target.value)} />
-        <input type="number" step="0.01" placeholder="Service Level (0–1)" value={serviceLevel} onChange={(e) => setServiceLevel(e.target.value)} />
-        <button onClick={handleManualSubmit}>Save Entry</button>
-      </div>
+      <Card>
+        <CardHeader><CardTitle>Upload CSV</CardTitle></CardHeader>
+        <CardContent>
+          <Button><Upload className="h-4 w-4 mr-2" /> Upload CSV</Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader><CardTitle>Data Actions</CardTitle></CardHeader>
+        <CardContent>
+          <Button variant="outline"><Download className="h-4 w-4 mr-2" /> Export Data</Button>
+        </CardContent>
+      </Card>
     </div>
   );
 }
