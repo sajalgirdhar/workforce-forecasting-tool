@@ -1,13 +1,14 @@
 import axios from "axios";
 
-// ✅ Read from .env (Netlify/Render) or fallback to localhost
-const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+// Try to load from environment, otherwise fallback to localhost
+const baseURL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+
+console.log("✅ API Base URL:", baseURL); // helps in debugging
 
 const api = axios.create({
-  baseURL: `${BACKEND_URL}/api`,
-  headers: {
-    "Content-Type": "application/json",
-  },
+  baseURL: `${baseURL}/api`,
+  headers: { "Content-Type": "application/json" },
 });
 
 export default api;
