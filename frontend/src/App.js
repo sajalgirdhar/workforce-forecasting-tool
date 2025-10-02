@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import axios from "axios";
+import api from "./lib/api";   // ✅ use the shared axios instance
 import { Card, CardContent, CardHeader, CardTitle } from "./components/ui/card";
 import { Button } from "./components/ui/button";
 import { Input } from "./components/ui/input";
@@ -20,7 +20,3 @@ import {
   BarChart3, Activity, AlertCircle, CheckCircle2, Brain, Settings
 } from "lucide-react";
 import { toast } from "sonner";
-
-// ✅ API base URL from .env (works in Netlify & locally)
-const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
-const API = `${BACKEND_URL}/api`;
