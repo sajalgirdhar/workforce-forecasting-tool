@@ -8,14 +8,14 @@ function App() {
   return (
     <Router>
       <div className="min-h-screen bg-slate-50">
-        {/* Simple Navigation */}
+        {/* Navigation Bar */}
         <nav className="bg-white shadow p-4 flex gap-6">
           <Link to="/" className="text-blue-600 hover:underline">🏠 Dashboard</Link>
           <Link to="/forecast" className="text-blue-600 hover:underline">📊 Forecasting</Link>
           <Link to="/data" className="text-blue-600 hover:underline">📂 Data Management</Link>
         </nav>
 
-        {/* Page Routes */}
+        {/* Routes */}
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/forecast" element={<Forecasting />} />
